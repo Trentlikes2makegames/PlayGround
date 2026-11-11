@@ -12,7 +12,7 @@
   const colors=[{shirt:'#c9f16a',shade:'#6d9d35',shorts:'#142a28',sock:'#d8f39a',skin:'#bd8061',hair:'#33251f',trim:'#f2f5df'},{shirt:'#f36f59',shade:'#a63d38',shorts:'#202c2d',sock:'#ffc2a8',skin:'#98654c',hair:'#201d1c',trim:'#fff0df'}];
   const roles=['keeper','anchor','wing','wing','striker'];
   const formations=[[{x:10,y:39},{x:33,y:39},{x:48,y:18},{x:49,y:60},{x:63,y:39}],[{x:120,y:39},{x:97,y:39},{x:82,y:18},{x:81,y:60},{x:67,y:39}]];
-  function makePlayer(team,index){const f=formations[team][index];return{team,index,role:roles[index],x:f.x,y:f.y,vx:0,vy:0,fx:team===0?1:-1,fy:0,r:index===0?1.35:1.13,speed:index===0?11.2:9.2,stamina:1,decision:rand(.2,1.3),kickCd:0,anim:rand(0,6),skill:0,number:team===0?[1,4,7,11,9][index]:[1,5,8,10,9][index],name:team===0?['MARTIN','REYES','PARK','COLE','YOU'][index]:['KOVAC','HAYES','SILVA','WARD','BELL'][index]};}
+  function makePlayer(team,index){const f=formations[team][index];return{team,index,role:roles[index],x:f.x,y:f.y,vx:0,vy:0,fx:team===0?1:-1,fy:0,r:index===0?1.35:1.13,speed:index===0?11.2:9.2,stamina:1,decision:rand(.2,1.3),kickCd:0,tackleCd:0,anim:rand(0,6),skill:0,number:team===0?[1,4,7,11,9][index]:[1,5,8,10,9][index],name:team===0?['MARTIN','REYES','PARK','COLE','YOU'][index]:['KOVAC','HAYES','SILVA','WARD','BELL'][index]};}
   function resetMatch(){players=[];for(let t=0;t<2;t++)for(let i=0;i<5;i++)players.push(makePlayer(t,i));user=players.find(p=>p.team===0&&p.index===4);ball={x:65,y:39,vx:0,vy:0,r:.82,owner:null,lastTouch:0};state.time=120;state.goals=[0,0];state.started=true;state.paused=false;state.over=false;state.skillCooldown=0;updateScore();overlay.classList.add('hidden');pauseBadge.classList.remove('show');statusEl.textContent='MATCH IN PROGRESS';notice('MAKE THE FIRST MOVE');}
   function updateScore(){scoreEl.textContent=`${state.goals[0]} — ${state.goals[1]}`;}
   function notice(text){toast.textContent=text;toast.classList.add('show');state.toastTimer=1.7;}
@@ -91,8 +91,16 @@
   function skill(){if(!state.started||state.paused||state.over||state.skillCooldown>0)return;const d=norm(user.fx,user.fy);let foe=nearestOpponent(user);if(foe&&dist(user,foe)<7){const side=norm(-(foe.y-user.y),foe.x-user.x);user.fx=norm(d.x*.25+side.x*.75,d.y*.25+side.y*.75).x;user.fy=norm(d.x*.25+side.x*.75,d.y*.25+side.y*.75).y;}
     user.skill=.72;state.skillCooldown=4.2;if(ball.owner===user){ball.x=user.x+user.fx*1.5;ball.y=user.y+user.fy*1.5;ball.vx=user.fx*5.5;ball.vy=user.fy*5.5;ball.owner=null;user.skillBall=.36;}
     notice(foe&&dist(user,foe)<8?'NICE FEINT!':'BURST OF PACE');statusEl.textContent='SKILL RECHARGING';}
+  function steal(){if(!state.started||state.paused||state.over)return;if(ball.owner===user){notice('YOU HAVE THE BALL');return;}if(user.tackleCd>0)return;
+    const carrier=ball.owner&&ball.owner.team!==user.team?ball.owner:null,target=carrier||ball,gap=dist(user,target);
+    if(gap>3.6){notice('GET CLOSER TO STEAL');return;}
+    user.tackleCd=1.05;const direction=norm(target.x-user.x,target.y-user.y);user.fx=direction.x;user.fy=direction.y;user.vx+=direction.x*5;user.vy+=direction.y*5;
+    if(carrier){ball.owner=user;ball.lastTouch=user.team;ball.x=user.x+user.fx*1.02;ball.y=user.y+user.fy*1.02;ball.vx=ball.vy=0;notice('CLEAN STEAL!');}
+    else if(!ball.owner){ball.owner=user;ball.lastTouch=user.team;ball.vx=ball.vy=0;notice('BALL WON!');}
+    else notice('PRESS THE OPPONENT');
+  }
   function inputVector(){let x=0,y=0;if(keys.has('KeyA')||keys.has('ArrowLeft'))x--;if(keys.has('KeyD')||keys.has('ArrowRight'))x++;if(keys.has('KeyW')||keys.has('ArrowUp'))y--;if(keys.has('KeyS')||keys.has('ArrowDown'))y++;x+=touch.x;y+=touch.y;return norm(x,y);}
-  function playerUpdate(p,dt){p.anim+=dt*(Math.hypot(p.vx,p.vy)*.8+1.5);p.kickCd=Math.max(0,p.kickCd-dt);p.skill=Math.max(0,p.skill-dt);
+  function playerUpdate(p,dt){p.anim+=dt*(Math.hypot(p.vx,p.vy)*.8+1.5);p.kickCd=Math.max(0,p.kickCd-dt);p.tackleCd=Math.max(0,p.tackleCd-dt);p.skill=Math.max(0,p.skill-dt);
     let desired={x:0,y:0},max=p.speed;
     if(p===user){const v=inputVector();desired=v;if(v.x||v.y){p.fx=v.x;p.fy=v.y;}const sprint=keys.has('ShiftLeft')||keys.has('ShiftRight');if(sprint&&p.stamina>.05){max*=1.53;p.stamina=Math.max(0,p.stamina-dt*.24);}else p.stamina=Math.min(1,p.stamina+dt*.11);if(p.skill>0)max*=1.62;if(state.charging)max*=.72;
     }else{
@@ -131,12 +139,12 @@
   function frame(now){requestAnimationFrame(frame);const dt=Math.min(.04,(now-(state.last||now))/1000);state.last=now;if(state.started&&!state.paused&&!state.over){state.time=Math.max(0,state.time-dt);if(state.charging)state.shotCharge=Math.min(1.25,state.shotCharge+dt);if(state.skillCooldown>0)state.skillCooldown=Math.max(0,state.skillCooldown-dt);if(state.toastTimer>0){state.toastTimer-=dt;if(state.toastTimer<=0)toast.classList.remove('show');}clockEl.textContent=`${String(Math.floor((120-state.time)/60)).padStart(2,'0')}:${String(Math.floor((120-state.time)%60)).padStart(2,'0')}`;if(state.skillCooldown===0&&statusEl.textContent==='SKILL RECHARGING')statusEl.textContent='MATCH IN PROGRESS';if(state.time===0)finish();else physics(dt);}render();}
   requestAnimationFrame(frame);
   playBtn.addEventListener('click',()=>{document.querySelector('.eyebrow').innerHTML='<span class="live-dot"></span> THE LIGHTS ARE ON';resetMatch();});
-  window.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.repeat)return;keys.add(e.code);if(e.code==='Space')shootStart();if(e.code==='KeyQ')pass();if(e.code==='KeyE')skill();if(e.code==='KeyP'&&state.started){state.paused=!state.paused;pauseBadge.classList.toggle('show',state.paused);statusEl.textContent=state.paused?'MATCH PAUSED':'MATCH IN PROGRESS';}});
+  window.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.repeat)return;keys.add(e.code);if(e.code==='Space')shootStart();if(e.code==='KeyQ')pass();if(e.code==='KeyE')skill();if(e.code==='KeyF')steal();if(e.code==='KeyP'&&state.started){state.paused=!state.paused;pauseBadge.classList.toggle('show',state.paused);statusEl.textContent=state.paused?'MATCH PAUSED':'MATCH IN PROGRESS';}});
   window.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='Space')shootEnd();});
   window.addEventListener('blur',()=>{keys.clear();if(state.charging)shootEnd();});
   $('soundBtn').addEventListener('click',e=>{state.sound=!state.sound;e.currentTarget.textContent=state.sound?'♫':'♪';e.currentTarget.style.color=state.sound?'#d9e3dd':'#738078';});
   const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};let heldDirs=new Set();
   function refreshTouch(){let x=0,y=0;for(const d of heldDirs){x+=dirs[d][0];y+=dirs[d][1];}const n=norm(x,y);touch.x=heldDirs.size?n.x:0;touch.y=heldDirs.size?n.y:0;}
   document.querySelectorAll('[data-dir]').forEach(btn=>{const d=btn.dataset.dir;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);heldDirs.add(d);refreshTouch();});for(const ev of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(ev,()=>{heldDirs.delete(d);refreshTouch();});});
-  document.querySelectorAll('[data-action]').forEach(btn=>{const act=btn.dataset.action;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);if(act==='shoot')shootStart();if(act==='pass')pass();if(act==='skill')skill();});if(act==='shoot')for(const ev of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(ev,shootEnd);});
+  document.querySelectorAll('[data-action]').forEach(btn=>{const act=btn.dataset.action;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);if(act==='shoot')shootStart();if(act==='pass')pass();if(act==='skill')skill();if(act==='steal')steal();});if(act==='shoot')for(const ev of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(ev,shootEnd);});
 })();
