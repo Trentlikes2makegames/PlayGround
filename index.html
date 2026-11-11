@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#071b19">
+  <title>TOUCHLINE — Five-a-side</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23c8f169'/%3E%3Ctext x='16' y='23' font-size='24' font-family='Arial' font-weight='900' text-anchor='middle' fill='%23071b19'%3ET%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Touchline home"><span class="brand-mark">T</span><span>TOUCH<span class="brand-light">LINE</span></span></a>
+      <div class="match-tag"><i></i> FRIENDLY · FIVE-A-SIDE</div>
+      <button class="icon-button" id="soundBtn" aria-label="Toggle sound" title="Sound on/off">♫</button>
+    </header>
+    <section class="game-frame" aria-label="Soccer match">
+      <canvas id="game" aria-label="Soccer field game"></canvas>
+      <div class="scoreboard">
+        <div class="score-team home"><span class="crest crest-home">✦</span><span class="team-name">NORTHSIDE</span></div>
+        <div class="score-center"><span id="score">0 — 0</span><small id="clock">00:00</small></div>
+        <div class="score-team away"><span class="team-name">RIVALS</span><span class="crest crest-away">◆</span></div>
+      </div>
+      <div class="toast" id="toast" aria-live="polite"></div>
+      <div class="goal-flash" id="goalFlash"><strong>GOAL!</strong><span>WHAT A FINISH</span></div>
+      <div class="match-overlay" id="overlay">
+        <div class="intro-card">
+          <div class="eyebrow"><span class="live-dot"></span> THE LIGHTS ARE ON</div>
+          <h1>Own the<br><em>moment.</em></h1>
+          <p>Quick feet. Smart runs. One perfect finish.<br>Take Northside to the top.</p>
+          <button class="play-button" id="playBtn">KICK OFF <span>→</span></button>
+          <div class="intro-meta"><span>5 × 5</span><b>·</b><span>2 MINUTES</span><b>·</b><span>NO OFFSIDE</span></div>
+        </div>
+        <div class="overlay-pitch-stamp">EST. 1998 <span>✦</span> NORTHSIDE PARK</div>
+      </div>
+      <div class="pause-badge" id="pauseBadge"><span>Ⅱ</span> PAUSED</div>
+      <div class="mobile-controls" id="mobileControls">
+        <div class="dpad"><button data-dir="up">▲</button><div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div>
+        <div class="mobile-actions"><button data-action="pass">PASS</button><button data-action="skill">SKILL</button><button data-action="shoot">SHOOT</button></div>
+      </div>
+    </section>
+    <footer class="bottom-bar">
+      <div class="controls"><span class="control-item"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>MOVE</span></span><i></i><span class="control-item"><kbd>SHIFT</kbd><span>SPRINT</span></span><i></i><span class="control-item"><kbd>SPACE</kbd><span>SHOOT</span></span><i></i><span class="control-item"><kbd>Q</kbd><span>PASS</span></span><i></i><span class="control-item"><kbd>E</kbd><span>SKILL MOVE</span></span><i></i><span class="control-item"><kbd>P</kbd><span>PAUSE</span></span></div>
+      <div class="match-note"><span class="status-pip"></span> <span id="statusText">READY WHEN YOU ARE</span></div>
+    </footer>
+    <section class="below-game">
+      <div class="tip"><span class="tip-icon">✦</span><div><strong>MAKE IT YOURS</strong><p>Get close to the ball, then use a skill to burst past a defender.</p></div></div>
+      <div class="tip"><span class="tip-icon">↗</span><div><strong>PLAY THE SPACE</strong><p>Your teammates keep their shape and make runs into open lanes.</p></div></div>
+      <div class="tip"><span class="tip-icon">◎</span><div><strong>THE PERFECT FINISH</strong><p>Face goal and shoot. Hold <kbd>SPACE</kbd> to charge a powerful strike.</p></div></div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
