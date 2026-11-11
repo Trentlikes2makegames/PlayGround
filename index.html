@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Night League — 3D Football</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23071512'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-size='44' fill='%23d7ff51'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--lime:#d7ff51;--white:#f7f8f3;--muted:#a9b5b0;--dark:#071512;--glass:rgba(7,21,18,.74)}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071512;color:var(--white);font-family:'DM Sans',sans-serif}canvas{display:block;position:fixed;inset:0;outline:none}
+    #vignette{position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(3,14,11,.48),transparent 25%,transparent 68%,rgba(3,14,11,.58)),radial-gradient(ellipse at center,transparent 42%,rgba(1,9,7,.35));z-index:1}
+    .hud{position:fixed;inset:0;z-index:2;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:27px 38px 23px}
+    .topbar{display:flex;align-items:flex-start;justify-content:space-between}.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:37px;height:37px;border:1px solid rgba(215,255,81,.55);border-radius:11px;display:grid;place-items:center;color:var(--lime);font-size:19px;transform:rotate(-8deg);background:rgba(10,31,25,.68)}.brand-copy{line-height:1}.brand-copy b{font:800 18px 'Barlow Condensed',sans-serif;letter-spacing:1.6px}.brand-copy small{display:block;color:#aab8af;font-size:9px;letter-spacing:2px;margin-top:5px;font-weight:700}
+    .scoreboard{position:absolute;top:24px;left:50%;transform:translateX(-50%);display:flex;align-items:stretch;min-width:330px;height:65px;background:rgba(5,18,15,.88);border:1px solid rgba(218,255,229,.13);border-radius:13px;overflow:hidden;box-shadow:0 12px 35px #06120f65;backdrop-filter:blur(12px)}.team-score{display:flex;align-items:center;gap:11px;padding:0 17px;flex:1}.team-score.right{justify-content:flex-end}.team-badge{width:25px;height:25px;border-radius:8px;display:grid;place-items:center;font-size:11px;font-weight:900}.home .team-badge{background:#d7ff51;color:#193024}.away .team-badge{background:#ff754b;color:#2c1710}.team-name{font:700 13px 'Barlow Condensed',sans-serif;letter-spacing:1.25px}.score{font:800 28px 'Barlow Condensed',sans-serif;letter-spacing:1px}.clock{align-self:center;min-width:61px;text-align:center;padding:0 11px;color:var(--lime);font:700 14px 'DM Sans',sans-serif;border-left:1px solid #ffffff17;border-right:1px solid #ffffff17}.round-tag{position:absolute;top:99px;left:50%;transform:translateX(-50%);color:#e4ede7b8;font-size:9px;letter-spacing:2.6px;font-weight:800;text-transform:uppercase;white-space:nowrap}
+    .top-right{display:flex;gap:9px;align-items:center}.icon-btn{pointer-events:auto;border:1px solid #e8f4e827;background:rgba(8,24,20,.62);color:#d7e3da;border-radius:10px;width:39px;height:39px;display:grid;place-items:center;font-size:16px;cursor:pointer;transition:.2s}.icon-btn:hover{color:var(--lime);border-color:#d7ff5170;background:#11251d}
+    .side-label{position:absolute;left:38px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;rotate:180deg;color:#edfff255;font:600 10px 'Barlow Condensed',sans-serif;letter-spacing:3.4px}
+    .center-callout{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);text-align:center;transition:opacity .4s;opacity:0}.center-callout.show{opacity:1}.center-callout .event{font:900 clamp(42px,8vw,82px)/.85 'Barlow Condensed',sans-serif;letter-spacing:1px;text-shadow:0 6px 25px #0008}.center-callout .sub{margin-top:13px;color:var(--lime);font-size:10px;letter-spacing:3px;font-weight:800}
+    .bottom{display:flex;justify-content:space-between;align-items:flex-end}.player-card{display:flex;align-items:center;gap:12px;background:linear-gradient(100deg,rgba(7,22,18,.91),rgba(7,22,18,.55));border:1px solid #ebfff01b;border-radius:13px;padding:11px 16px 11px 11px;min-width:208px;backdrop-filter:blur(10px)}.player-avatar{width:42px;height:45px;border-radius:9px;background:linear-gradient(145deg,#dafd67,#6a9c45);display:grid;place-items:center;color:#183322;font:900 19px 'Barlow Condensed',sans-serif;position:relative;overflow:hidden}.player-avatar:after{content:'';position:absolute;width:55px;height:14px;background:#ffffff4c;rotate:-40deg;top:8px;left:-15px}.player-info b{font:700 15px 'Barlow Condensed',sans-serif;letter-spacing:.8px}.player-info small{display:block;color:#9eaea3;font-size:9px;letter-spacing:1.3px;margin-top:3px;font-weight:700}.stamina{display:flex;align-items:center;gap:7px;margin-top:7px}.stamina-label{font-size:8px;letter-spacing:1.3px;color:#82948a;font-weight:800}.stamina-track{height:3px;width:91px;background:#ffffff24;border-radius:5px;overflow:hidden}.stamina-fill{height:100%;width:100%;background:var(--lime);transition:width .15s;border-radius:5px}
+    .controls{display:flex;gap:16px;align-items:center;background:rgba(7,20,17,.66);padding:10px 15px;border:1px solid #edfff01b;border-radius:11px;backdrop-filter:blur(8px)}.control{display:flex;align-items:center;gap:7px;color:#a7b6ac;font-size:9px;font-weight:700;letter-spacing:.7px;white-space:nowrap}.key{height:23px;min-width:23px;border:1px solid #dfeee32e;background:#11231d;border-radius:5px;display:grid;place-items:center;padding:0 5px;color:#eef8ed;font:700 10px 'DM Sans',sans-serif;box-shadow:0 2px 0 #0005}.control span:last-child em{font-style:normal;color:var(--lime)}
+    .possession{display:flex;align-items:center;gap:8px;color:#d4e4d8;font-size:9px;font-weight:800;letter-spacing:1.4px;margin-bottom:12px}.possession .dot{width:6px;height:6px;background:var(--lime);box-shadow:0 0 12px var(--lime);border-radius:50%}.help{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);font-size:9px;color:#effff04d;letter-spacing:1px;z-index:2;pointer-events:none}
+    #pause-screen{position:fixed;inset:0;z-index:4;background:rgba(3,12,10,.72);backdrop-filter:blur(9px);display:none;place-items:center;text-align:center}#pause-screen.open{display:grid}.modal h1{font:900 60px/.9 'Barlow Condensed',sans-serif;margin:10px 0;letter-spacing:2px}.modal p{color:#9baea2;font-size:12px;letter-spacing:1px;margin:12px 0 23px}.modal button{cursor:pointer;background:var(--lime);border:0;border-radius:8px;padding:13px 28px;color:#172518;font:800 12px 'DM Sans',sans-serif;letter-spacing:1.3px}.modal .eyebrow{color:var(--lime);font-size:10px;font-weight:800;letter-spacing:3px}
+    @media(max-width:760px){.hud{padding:16px}.scoreboard{top:73px;min-width:290px;height:57px}.round-tag{top:138px}.side-label{display:none}.controls{gap:8px;padding:8px}.control{font-size:8px}.bottom{align-items:flex-end}.player-card{min-width:unset;padding:8px}.player-info{display:none}.help{display:none}.brand-copy b{font-size:15px}.brand-mark{width:32px;height:32px}.top-right{gap:5px}}
+  </style>
+</head>
+<body>
+  <div id="vignette"></div>
+  <div class="hud">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">✦</div><div class="brand-copy"><b>TOUCHLINE</b><small>STREET TO STADIUM</small></div></div>
+      <div class="scoreboard">
+        <div class="team-score home"><span class="team-badge">N</span><span class="team-name">NORTHSIDE</span><span class="score" id="home-score">0</span></div>
+        <div class="clock" id="clock">04:00</div>
+        <div class="team-score right away"><span class="score" id="away-score">0</span><span class="team-name">RIVALS</span><span class="team-badge">R</span></div>
+      </div>
+      <div class="top-right"><button class="icon-btn" id="sound-btn" title="Sound">♪</button><button class="icon-btn" id="pause-btn" title="Pause (Esc)">Ⅱ</button></div>
+    </header>
+    <div class="round-tag">EXHIBITION MATCH &nbsp; • &nbsp; NIGHT LEAGUE</div>
+    <div class="side-label">NORTHSIDE ATHLETIC &nbsp; / &nbsp; SEASON 2026</div>
+    <div class="center-callout" id="callout"><div class="event" id="event-title">GOAL!</div><div class="sub" id="event-sub">NORTHSIDE TAKES THE LEAD</div></div>
+    <footer class="bottom">
+      <div class="player-card"><div class="player-avatar">07</div><div class="player-info"><b>J. RIVERA</b><small>CAPTAIN &nbsp; • &nbsp; FORWARD</small><div class="stamina"><span class="stamina-label">STAMINA</span><div class="stamina-track"><div class="stamina-fill" id="stamina-fill"></div></div></div></div></div>
+      <div class="controls">
+        <div class="control"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span></div>
+        <div class="control"><span><em>MOVE</em></span></div><div class="control"><span class="key">SHIFT</span><span><em>SPRINT</em></span></div><div class="control"><span class="key">SPACE</span><span><em>SHOOT</em></span></div><div class="control"><span class="key">E</span><span><em>PASS</em></span></div>
+      </div>
+      <div class="possession"><span class="dot"></span><span id="status-text">YOUR POSSESSION</span></div>
+    </footer>
+  </div>
+  <div class="help">ESC TO PAUSE &nbsp; · &nbsp; R TO RESTART</div>
+  <div id="pause-screen"><div class="modal"><div class="eyebrow">NIGHT LEAGUE · EXHIBITION</div><h1>TAKE A BREATHER</h1><p>Match paused. The crowd is waiting.</p><button id="resume-btn">BACK TO THE PITCH</button></div></div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
