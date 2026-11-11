@@ -21,7 +21,48 @@ const concrete=mat(0x34433e),upper=mat(0x20312c),seat1=mat(0x53675d),seat2=mat(0
 for(const side of [-1,1]){box(scene,side*40,5,0,2,10,110,concrete,false,true);for(let row=0;row<8;row++){const y=8+row*1.12,x=side*(39+row*.88);box(scene,x,y,0,1.6,.7,106,row%3===0?seat2:seat1);const colors=[0xe4c89e,0x3978a8,0xc85542,0xd5d4bd,0x5d9c67],geo=new THREE.SphereGeometry(.12,6,5);for(let c=0;c<5;c++){const crowd=new THREE.InstancedMesh(geo,mat(colors[c]),24),dummy=new THREE.Object3D();for(let n=0;n<24;n++){dummy.position.set(x+side*Math.random()*.55,y+.38+(Math.random()-.5)*.24,-50+(c*24+n)*.88);dummy.scale.set(.72,1.35,.72);dummy.updateMatrix();crowd.setMatrixAt(n,dummy.matrix);}crowd.instanceMatrix.needsUpdate=true;scene.add(crowd);}}box(scene,side*48,17,0,1.2,.35,112,upper);for(let z=-49;z<=49;z+=16){box(scene,side*48,19,z,1.5,4,.65,mat(0x374a42));box(scene,side*47.2,21,z,2.6,.22,5,mat(0xf4f3df,.25));}}
 for(const end of [-1,1]){box(scene,0,5,end*55,84,10,2,concrete,false,true);for(let row=0;row<7;row++)box(scene,0,8+row*1.15,end*(55+row*.75),82+row*1.2,.7,1.4,row%2?seat1:seat2);box(scene,0,17,end*61,90,.5,1.5,upper);}
 const boardMat=mat(0x102720,.35);for(const side of [-1,1]){box(scene,side*36,.7,0,.35,1.4,98,boardMat);for(let z=-43;z<47;z+=12)box(scene,side*35.78,.74,z,.08,.82,10,mat(z%24?0xbee847:0x66cbd0,.45));}for(const z of [-50.5,50.5])box(scene,0,.7,z,68,1.4,.35,boardMat);
-function makePlayer(team,x,z,number,keeper=false){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);const shirt=team==='home'?blue:red,body=new THREE.Group();g.add(body);const torso=new THREE.Mesh(new THREE.CylinderGeometry(.42,.5,.95,12),shirt);torso.position.y=1.35;torso.castShadow=true;body.add(torso);const bib=new THREE.Mesh(new THREE.BoxGeometry(.08,.58,.035),mat(team==='home'?0xbcd8ff:0xffd0ac));bib.position.set(0,1.38,-.426);body.add(bib);const shorts=new THREE.Mesh(new THREE.CylinderGeometry(.48,.43,.42,12),dark);shorts.position.y=.67;shorts.castShadow=true;g.add(shorts);sphere(body,0,2.08,0,.29,skin,[.85,1.08,.9]);sphere(body,0,2.25,.04,.27,mat(0x33231b),[.9,.45,.92]);const cv=document.createElement('canvas');cv.width=128;cv.height=128;const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.font='bold 76px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(number),64,66);const numberMesh=new THREE.Mesh(new THREE.PlaneGeometry(.35,.38),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,side:THREE.DoubleSide}));numberMesh.position.set(0,1.45,.43);body.add(numberMesh);const limbs=[];for(const side of [-1,1]){const arm=new THREE.Group();arm.position.set(side*.52,1.68,0);body.add(arm);const armMesh=new THREE.Mesh(new THREE.CylinderGeometry(.13,.105,.68,9),shirt);armMesh.position.y=-.3;armMesh.rotation.z=side*-.15;arm.add(armMesh);sphere(arm,0,-.66,0,.11,skin);const leg=new THREE.Group();leg.position.set(side*.23,.53,0);g.add(leg);const thigh=new THREE.Mesh(new THREE.CylinderGeometry(.15,.13,.5,9),dark);thigh.position.y=-.25;leg.add(thigh);const shin=new THREE.Mesh(new THREE.CylinderGeometry(.105,.12,.43,9),skin);shin.position.set(0,-.66,0);leg.add(shin);const sock=new THREE.Mesh(new THREE.CylinderGeometry(.12,.115,.23,9),white);sock.position.set(0,-.67,0);leg.add(sock);const boot=new THREE.Mesh(new THREE.BoxGeometry(.23,.12,.38),mat(0x182019,.3));boot.position.set(0,-.82,-.1);leg.add(boot);limbs.push({arm,leg,side});}const shadow=new THREE.Mesh(new THREE.CircleGeometry(.65,20),new THREE.MeshBasicMaterial({color:0x07130d,transparent:true,opacity:.22,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;g.add(shadow);return{group:g,body,limbs,team,number,keeper,velocity:new THREE.Vector3(),homeX:x,homeZ:z,run:0};}
+function makePlayer(team,x,z,number,keeper=false){
+ const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+ const shirt=team==='home'?blue:red,trim=team==='home'?blueBright:redBright,skinTone=skin,body=new THREE.Group();g.add(body);
+ const torso=new THREE.Mesh(new THREE.CylinderGeometry(.37,.45,.88,18,1),shirt);torso.position.y=1.36;torso.castShadow=true;torso.receiveShadow=true;body.add(torso);
+ sphere(body,0,1.49,0,.39,shirt,[1,.82,.72]);
+ const collar=new THREE.Mesh(new THREE.TorusGeometry(.145,.035,7,18),mat(team==='home'?0xbcd8ff:0xffd0ac));collar.rotation.x=Math.PI/2;collar.position.set(0,1.82,0);body.add(collar);
+ const bib=new THREE.Mesh(new THREE.BoxGeometry(.075,.53,.025),mat(team==='home'?0xbcd8ff:0xffd0ac));bib.position.set(0,1.4,-.413);body.add(bib);
+ for(const side of [-1,1]){const seam=box(body,side*.205,1.38,-.405,.018,.53,.014,trim);seam.material=trim;}
+ const shorts=new THREE.Mesh(new THREE.CylinderGeometry(.43,.39,.45,16,1),dark);shorts.position.y=.68;shorts.castShadow=true;g.add(shorts);
+ const waistband=new THREE.Mesh(new THREE.TorusGeometry(.405,.035,6,18),mat(0x263b32));waistband.rotation.x=Math.PI/2;waistband.position.y=.895;g.add(waistband);
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.105,.13,.19,12),skinTone);neck.position.y=1.88;neck.castShadow=true;body.add(neck);
+ sphere(body,0,2.12,0,.255,skinTone,[.88,1.08,.9]);
+ const hair=mat(0x33231b),hairCap=sphere(body,0,2.28,.015,.238,hair,[1,.52,1]);hairCap.position.set(0,2.29,.025);
+ sphere(body,0,2.205,-.207,.13,hair,[1,.43,.38]);
+ for(const side of [-1,1]){
+  sphere(body,side*.235,2.11,0,.055,skinTone,[.65,1,1]);
+  sphere(body,side*.087,2.14,-.222,.027,mat(0xf4e8d9),[1,.9,.45]);
+  sphere(body,side*.087,2.14,-.239,.013,mat(0x211c19),[1,1,.6]);
+ }
+ sphere(body,0,2.075,-.25,.035,skinTone,[.72,.8,1]);
+ const mouth=box(body,0,2.018,-.226,.075,.012,.014,mat(0x70483c));
+ const cv=document.createElement('canvas');cv.width=128;cv.height=128;const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.font='bold 76px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(number),64,66);
+ const numberMesh=new THREE.Mesh(new THREE.PlaneGeometry(.35,.38),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,side:THREE.DoubleSide}));numberMesh.position.set(0,1.43,.414);body.add(numberMesh);
+ const limbs=[];
+ for(const side of [-1,1]){
+  const arm=new THREE.Group();arm.position.set(side*.48,1.63,0);body.add(arm);
+  const sleeve=new THREE.Mesh(new THREE.CylinderGeometry(.145,.13,.34,12),shirt);sleeve.position.set(side*.015,-.12,0);sleeve.rotation.z=side*-.12;sleeve.castShadow=true;arm.add(sleeve);
+  const upperArm=new THREE.Mesh(new THREE.CylinderGeometry(.105,.085,.31,12),skinTone);upperArm.position.y=-.43;upperArm.rotation.z=side*-.08;upperArm.castShadow=true;arm.add(upperArm);
+  const forearm=new THREE.Mesh(new THREE.CylinderGeometry(.085,.065,.28,12),skinTone);forearm.position.set(side*-.015,-.7,0);forearm.castShadow=true;arm.add(forearm);
+  sphere(arm,0,-.86,0,.085,skinTone,[.9,1,.85]);
+  const leg=new THREE.Group();leg.position.set(side*.22,.54,0);g.add(leg);
+  const thigh=new THREE.Mesh(new THREE.CylinderGeometry(.145,.12,.42,12),skinTone);thigh.position.y=-.22;thigh.castShadow=true;leg.add(thigh);
+  const shin=new THREE.Mesh(new THREE.CylinderGeometry(.105,.085,.38,12),skinTone);shin.position.y=-.59;shin.castShadow=true;leg.add(shin);
+  const sock=new THREE.Mesh(new THREE.CylinderGeometry(.108,.105,.29,12),white);sock.position.set(0,-.63,0);sock.castShadow=true;leg.add(sock);
+  const sockBand=new THREE.Mesh(new THREE.TorusGeometry(.105,.018,5,14),trim);sockBand.rotation.x=Math.PI/2;sockBand.position.set(0,-.49,0);leg.add(sockBand);
+  const boot=new THREE.Mesh(new THREE.SphereGeometry(.17,14,10),mat(0x182019,.35));boot.scale.set(.8,.48,1.3);boot.position.set(0,-.82,-.08);boot.castShadow=true;leg.add(boot);
+  const sole=box(leg,0,-.88,-.08,.22,.035,.37,mat(0x090f0c,.5));
+  limbs.push({arm,leg,side});
+ }
+ const shadow=new THREE.Mesh(new THREE.CircleGeometry(.65,24),new THREE.MeshBasicMaterial({color:0x07130d,transparent:true,opacity:.22,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;g.add(shadow);
+ return{group:g,body,limbs,team,number,keeper,velocity:new THREE.Vector3(),homeX:x,homeZ:z,run:0};
+}
 const homePlayers=[makePlayer('home',0,25,7),makePlayer('home',-12,16,11),makePlayer('home',12,4,8),makePlayer('home',-16,-8,3),makePlayer('home',15,-19,10),makePlayer('home',0,44,1,true)];
 const awayPlayers=[makePlayer('away',0,-22,9),makePlayer('away',-12,-15,6),makePlayer('away',12,-5,4),makePlayer('away',-15,8,2),makePlayer('away',15,18,5),makePlayer('away',0,-44,1,true)];
 const captain=homePlayers[0],allPlayers=[...homePlayers,...awayPlayers];
